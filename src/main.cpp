@@ -254,37 +254,102 @@ int main() {
 		}
 
 		bool too_close = false;
+		// 30m for collision pre-warning distance
+		double gap = 20.0;  	
+		// Lane change flag;
+		// If any other car is immediately to left or right, prevent lane change
+		bool car_to_left = false, car_to_right = false,car_just_ahead = false;
+
 		for(int i=0; i < sensor_fusion.size();i++)
 		{
-			float d = sensor_fusion[i][6];
-			if (d < (2+4*lane+2) && d > (2+4*lane-2))
+			double check_car_d = sensor_fusion[i][6];
+			//if (check_car_d < (2+4*lane+2) && check_car_d > (2+4*lane-2))
 			{
 				double vx = sensor_fusion[i][3];
 				double vy = sensor_fusion[i][4];
 				double check_speed = sqrt(vx*vx + vy*vy);
 				double check_car_s = sensor_fusion[i][5];
+				int check_car_lane = check_car_d/4;
+				cout << "check_car_lane:" << check_car_lane << endl;
 
-				check_car_s +=((double)prev_size*0.02*check_speed);// run out all path point and see if collision
+				check_car_s +=((double)prev_size*0.02*check_speed); // See if the end of the ego car's path's ending postion has a collision
 
-				if ( (check_car_s  > car_s) &&  ((check_car_s - car_s) < 30))
-				{
-					// slow to avoid collision
-					// flag to change lane
-					//ref_vel=29.5;
-					too_close =true;
-					if (lane >0)
-						lane=0;
+				// Caculate whether the checked car and ego car will have collision when ego finished lane changing
+				if (check_car_lane == lane) {
+					// This car is in front of ego car and within distance of 30m
+					if ((check_car_s > car_s) && ((check_car_s - car_s) < gap))
+					{
+						too_close = true;
+					}
+				} else if (check_car_lane - lane == 1) {
+					// Ego car can change right
+					car_to_right |= ((car_s - gap) < check_car_s) && ((car_s + gap) > check_car_s);
+				} else if (lane - check_car_lane == 1) {
+					// Ego car can change left
+					car_to_left |= ((car_s - gap) < check_car_s) && ((car_s + gap) > check_car_s);
+				}
 
+				// Min distance to leading cars,avoid collision when change lane
+				double FOLLOW_DISTANCE = 5.0;
+				// See if this car is immediately to left or right of ego car
+				double s_diff = fabs(check_car_s - car_s);
+				if (s_diff < FOLLOW_DISTANCE) {
+					double d_diff = check_car_d - car_d;
+					if (d_diff > 2 && d_diff < 6) {
+						car_to_right = true;
+					} else if (d_diff < -2 && d_diff > -6) {
+						car_to_left = true;
+					} 
+					//else if (d_diff > -2 && d_diff < 2) {
+					//	car_just_ahead = true;
+					//}
 				}
 			}
 		}
+		
+		cout << "too_close:" << too_close << endl;
+		cout << "car_to_right:" << car_to_right << endl;
+		cout << "car_to_left:" << car_to_left << endl;
 
-		if (too_close)
-			ref_vel -=.224;
-		else if(ref_vel < 49.5)
-			ref_vel +=.224;
+		double speed_limit = 49.5;
 
+		if (too_close){
+		
+			// No cars to the right right now or will to be in future
+			// and can shift to right
+			if(!car_to_right && lane < 2)
+			{
+				lane +=1;
+			}
+			// No cars to the left right now or will to be in future
+			// and can shift to left
+			else if(!car_to_left && lane >0)
+			{
+				lane -=1;
+			}
+			else
+			{
+				//if(car_just_ahead)
+					// Keep lane and slow down
+					ref_vel -=.224*2.0;
+			}
+		}
+		else
+		{
+			// Try to shift to middle lane and check if it is safe to shift
+			if ((lane != 1) && ((lane == 2 && !car_to_left) || (lane == 0 && !car_to_right)) ) {
 
+				lane = 1;
+			}
+
+			if(ref_vel < speed_limit)
+			{
+			
+				ref_vel +=.224;
+			}
+		}
+
+		cout << "lane:" << lane << " car_d:"<< car_d <<endl;
 		///////////////////////////////////////////////////////
 
 
@@ -346,7 +411,6 @@ int main() {
 			ptsx[i] = (shift_x * cos(0-ref_yaw) - shift_y*sin(0-ref_yaw));
 			ptsy[i] = (shift_x * sin(0-ref_yaw) + shift_y*cos(0-ref_yaw));
 
-
 		}
 
 
@@ -390,20 +454,6 @@ int main() {
 			next_y_vals.push_back(y_point);
 
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
           	json msgJson;
 

@@ -244,213 +244,227 @@ int main() {
           	// Sensor Fusion Data, a list of all other cars on the same side of the road.
           	auto sensor_fusion = j[1]["sensor_fusion"];
 
-		int prev_size = previous_path_x.size();
+			int prev_size = previous_path_x.size();
 
 
-		///////////////////////////////////////////////////////
-		if (prev_size > 0)
-		{
-			car_s = end_path_s;
-		}
-
-		bool too_close = false;
-		// 30m for collision pre-warning distance
-		double gap = 20.0;  	
-		// Lane change flag;
-		// If any other car is immediately to left or right, prevent lane change
-		bool car_to_left = false, car_to_right = false;
-
-		for(int i=0; i < sensor_fusion.size();i++)
-		{
-			double check_car_d = sensor_fusion[i][6];
-			//if (check_car_d < (2+4*lane+2) && check_car_d > (2+4*lane-2))
+			///////////////////////////////////////////////////////
+			// Prediction and detect if can drive in faster lane
+			///////////////////////////////////////////////////////
+			if (prev_size > 0)
 			{
-				double vx = sensor_fusion[i][3];
-				double vy = sensor_fusion[i][4];
-				double check_speed = sqrt(vx*vx + vy*vy);
-				double check_car_s = sensor_fusion[i][5];
-				int check_car_lane = check_car_d/4;
+				car_s = end_path_s;
+			}
 
-				check_car_s +=((double)prev_size*0.02*check_speed); // See if the end of the ego car's path's ending postion has a collision
+			bool too_close = false;
+			// 30m for collision pre-warning distance
+			double gap = 30.0;  	
+			// Lane change flag;
+			// If any other car is immediately to left or right, prevent lane change
+			bool car_to_left = false, car_to_right = false;
 
-				// Caculate whether the checked car and ego car will have collision when ego finished lane changing
-				if (check_car_lane == lane) {
-					// This car is in front of ego car and within distance of 30m
-					if ((check_car_s > car_s) && ((check_car_s - car_s) < gap))
+			for(int i=0; i < sensor_fusion.size();i++)
+			{
+				double check_car_d = sensor_fusion[i][6];
+				double	vx		= sensor_fusion[i][3];
+				double	vy		= sensor_fusion[i][4];
+				double	check_speed	= sqrt( vx * vx + vy * vy );
+				double	check_car_s	= sensor_fusion[i][5];
+				int	check_car_lane	= check_car_d / 4;
+
+				/* See if the end of the ego car's path's ending postion has a collision */
+				check_car_s += ( (double) prev_size * 0.02 * check_speed); 
+
+				/* Caculate whether the checked car and ego car will have collision when ego finished lane changing */
+				if ( check_car_lane == lane )
+				{
+					/* This car is in front of ego car and within distance of 30m */
+					if ( (check_car_s > car_s) && ( (check_car_s - car_s) < gap) )
 					{
 						too_close = true;
 					}
-				} else if (check_car_lane - lane == 1) {
-					// Ego car can change right
-					car_to_right |= ((car_s - gap) < check_car_s) && ((car_s + gap) > check_car_s);
-
-				} else if (lane - check_car_lane == 1) {
-					// Ego car can change left
-					car_to_left |= ((car_s - gap) < check_car_s) && ((car_s + gap) > check_car_s);
+				} else if ( check_car_lane - lane == 1 )
+				{
+					/* Ego car can change right */
+					car_to_right |= ( (car_s - gap) < check_car_s) && ( (car_s + gap) > check_car_s);
+				} else if ( lane - check_car_lane == 1 )
+				{
+					/* Ego car can change left */
+					car_to_left |= ( (car_s - gap) < check_car_s) && ( (car_s + gap) > check_car_s);
 				}
 
-				// Min distance to leading cars,avoid collision when change lane
+				/* Min distance to leading cars, avoid collision when change lane */
 				double FOLLOW_DISTANCE = 5.0;
-				// See if this car is immediately to left or right of ego car
-				double s_diff = fabs(check_car_s - car_s);
-				if (s_diff < FOLLOW_DISTANCE) {
+
+				/****************************************************************
+				* See if this car is immediately to left or right of the ego car
+				****************************************************************/
+
+				double s_diff = fabs( check_car_s - car_s );
+				if ( s_diff < FOLLOW_DISTANCE )
+				{
 					double d_diff = check_car_d - car_d;
-					if (d_diff > 2 && d_diff < 6) {
+					if ( d_diff > 2 && d_diff < 6 )
+					{
 						car_to_right = true;
-					} else if (d_diff < -2 && d_diff > -6) {
+					} else if ( d_diff < -2 && d_diff > -6 )
+					{
 						car_to_left = true;
-					} 
+					}
 				}
 			}
-		}
-		
-		cout << "too_close:" << too_close << endl;
-		cout << "car_to_right:" << car_to_right<< car_to_right << car_to_right << car_to_right<< endl;
-		cout << "car_to_left:" << car_to_left << car_to_left << car_to_left << car_to_left << endl;
+			
+			cout << "too_close:" << too_close << endl;
+			cout << "car_to_right:" << car_to_right << endl;
+			cout << "car_to_left:" << car_to_left << endl;
 
-		double speed_limit = 49.5;
+			double speed_limit = 49.5;
 
-		if (too_close){
-		
-			// No cars to the right right now or will to be in future
-			// and can shift to right
-			if(!car_to_right && lane < 2)
+			if ( too_close )
 			{
-				lane +=1;
+				/*
+				 * No cars to the right right now or will to be in future
+				 * and can shift to right
+				 */
+				if ( !car_to_right && lane < 2 )
+				{
+					lane += 1;
+				}
+				/*
+				 * No cars to the left right now or will to be in future
+				 * and can shift to left
+				 */
+				else if ( !car_to_left && lane > 0 )
+				{
+					lane -= 1;
+				}else  {
+					/*
+					 * Keep lane and slow down
+					 */
+					ref_vel -= .224 * 2.0;
+				}
+			}else  {
+				/* Way back into love ^^ */
+				/* Try to shift to middle lane and check if it is safe to shift */
+				if ( (lane != 1) && ( (lane == 2 && !car_to_left) || (lane == 0 && !car_to_right) ) )
+				{
+					lane = 1;
+				}
+
+				if ( ref_vel < speed_limit )
+				{
+					ref_vel += .224;
+				}
 			}
-			// No cars to the left right now or will to be in future
-			// and can shift to left
-			else if(!car_to_left && lane >0)
+
+			cout << "lane:" << lane << " car_d:"<< car_d <<endl;
+
+			///////////////////////////////////////////////////////
+			// Trajectory Generation smoothly
+			///////////////////////////////////////////////////////
+			// Create a list of sparse waypoints with 30m's interval 
+			vector<double> ptsx;
+			vector<double> ptsy;
+
+			// Reference x, y, yaw states of ego car
+			double ref_x = car_x;
+			double ref_y = car_y;
+			double ref_yaw = deg2rad(car_yaw);
+
+			// If the car is run out of previous generated paths,use the current position as the reference state
+			if ( prev_size < 2)
 			{
-				lane -=1;
-			}
+				double prev_car_x = car_x - cos(car_yaw);
+				double prev_car_y = car_y - sin(car_yaw);
+
+				ptsx.push_back(prev_car_x);
+				ptsx.push_back(car_x);
+
+				ptsy.push_back(prev_car_y);
+				ptsy.push_back(car_y);
+			} 
 			else
 			{
-				//if(car_just_ahead)
-					// Keep lane and slow down
-					ref_vel -=.224*2.0;
-			}
-		}
-		else
-		{
-			// Try to shift to middle lane and check if it is safe to shift
-			if ((lane != 1) && ((lane == 2 && !car_to_left) || (lane == 0 && !car_to_right)) ) {
+				// Use the previous path's last two ending point to caculate reference state
+				ref_x = previous_path_x[prev_size - 1];
+				ref_y = previous_path_y[prev_size - 1];
+				
+				double ref_x_prev = previous_path_x[prev_size - 2];
+				double ref_y_prev = previous_path_y[prev_size - 2];
 
-				lane = 1;
+				ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
+
+				ptsx.push_back(ref_x_prev);
+				ptsx.push_back(ref_x);
+
+				ptsy.push_back(ref_y_prev);
+				ptsy.push_back(ref_y);
+
 			}
 
-			if(ref_vel < speed_limit)
+			// Add sparse waypoints (has 30m's interval) for spline fitting of trajectory generation 
+			vector<double> next_wp0 = getXY(car_s + gap, (2+4*lane), map_waypoints_s,map_waypoints_x,map_waypoints_y);
+			vector<double> next_wp1 = getXY(car_s + (gap*2), (2+4*lane), map_waypoints_s,map_waypoints_x,map_waypoints_y);
+			vector<double> next_wp2 = getXY(car_s + (gap*3), (2+4*lane), map_waypoints_s,map_waypoints_x,map_waypoints_y);
+
+			ptsx.push_back(next_wp0[0]);
+			ptsx.push_back(next_wp1[0]);
+			ptsx.push_back(next_wp2[0]);
+
+			ptsy.push_back(next_wp0[1]);
+			ptsy.push_back(next_wp1[1]);
+			ptsy.push_back(next_wp2[1]);
+
+
+			for(int i=0;i < ptsx.size();i++)
 			{
-			
-				ref_vel +=.224;
+				double shift_x = ptsx[i] - ref_x;
+				double shift_y = ptsy[i] - ref_y;
+				// Transform the fitting nodes into ego car's local coordinates
+				ptsx[i] = (shift_x * cos(0-ref_yaw) - shift_y*sin(0-ref_yaw));
+				ptsy[i] = (shift_x * sin(0-ref_yaw) + shift_y*cos(0-ref_yaw));
+
 			}
-		}
 
-		cout << "lane:" << lane << " car_d:"<< car_d <<endl;
-		///////////////////////////////////////////////////////
+			tk::spline s;
+			// Set the node points
+			s.set_points(ptsx,ptsy);
 
+			vector<double> next_x_vals;
+			vector<double> next_y_vals;
 
-		vector<double> ptsx;
-		vector<double> ptsy;
+			for(int i=0; i< previous_path_x.size();i++)
+			{
+				next_x_vals.push_back(previous_path_x[i]);
+				next_y_vals.push_back(previous_path_y[i]);
+			}
 
+			// Caculate the next <50 - previous_path_x.size> (x,y) points withing 30m's distance
+			double target_x = gap;
+			double target_y = s(target_x);
+			double target_dist = sqrt( (target_x*target_x) + (target_y*target_y));
 
-		double ref_x = car_x;
-		double ref_y = car_y;
-		double ref_yaw = deg2rad(car_yaw);
+			double x_add_on = 0;	
+			// Fill the rest path points for path planner
+			for(int i=0; i<=50 - previous_path_x.size(); i++)
+			{
+				double N = ((target_dist)/(0.02*ref_vel/2.24));
+				double x_point = x_add_on + (target_x)/N;
+				double y_point = s(x_point);
 
-		if ( prev_size < 2)
-		{
-			double prev_car_x = car_x - cos(car_yaw);
-			double prev_car_y = car_y - sin(car_yaw);
+				x_add_on = x_point;
 
-			ptsx.push_back(prev_car_x);
-			ptsx.push_back(car_x);
+				double x_ref = x_point;
+				double y_ref = y_point;
+				// Transform back to world coordinates
+				x_point = (x_ref*cos(ref_yaw) - y_ref*sin(ref_yaw));
+				y_point = (x_ref*sin(ref_yaw) + y_ref*cos(ref_yaw));
 
-			ptsy.push_back(prev_car_y);
-			ptsy.push_back(car_y);
-		} 
-		else
-		{
-			ref_x = previous_path_x[prev_size - 1];
-			ref_y = previous_path_y[prev_size - 1];
-			
-			double ref_x_prev = previous_path_x[prev_size - 2];
-			double ref_y_prev = previous_path_y[prev_size - 2];
+				x_point += ref_x;
+				y_point += ref_y;
 
-			ref_yaw = atan2(ref_y - ref_y_prev, ref_x - ref_x_prev);
-
-			ptsx.push_back(ref_x_prev);
-			ptsx.push_back(ref_x);
-
-			ptsy.push_back(ref_y_prev);
-			ptsy.push_back(ref_y);
-
-		}
-
-		vector<double> next_wp0 = getXY(car_s + 30, (2+4*lane), map_waypoints_s,map_waypoints_x,map_waypoints_y);
-		vector<double> next_wp1 = getXY(car_s + 60, (2+4*lane), map_waypoints_s,map_waypoints_x,map_waypoints_y);
-		vector<double> next_wp2 = getXY(car_s + 90, (2+4*lane), map_waypoints_s,map_waypoints_x,map_waypoints_y);
-
-		ptsx.push_back(next_wp0[0]);
-		ptsx.push_back(next_wp1[0]);
-		ptsx.push_back(next_wp2[0]);
-
-		ptsy.push_back(next_wp0[1]);
-		ptsy.push_back(next_wp1[1]);
-		ptsy.push_back(next_wp2[1]);
-
-
-		for(int i=0;i < ptsx.size();i++)
-		{
-			double shift_x = ptsx[i] - ref_x;
-			double shift_y = ptsy[i] - ref_y;
-
-			ptsx[i] = (shift_x * cos(0-ref_yaw) - shift_y*sin(0-ref_yaw));
-			ptsy[i] = (shift_x * sin(0-ref_yaw) + shift_y*cos(0-ref_yaw));
-
-		}
-
-
-		tk::spline s;
-
-		s.set_points(ptsx,ptsy);
-
-		vector<double> next_x_vals;
-		vector<double> next_y_vals;
-
-		for(int i=0; i< previous_path_x.size();i++)
-		{
-			next_x_vals.push_back(previous_path_x[i]);
-			next_y_vals.push_back(previous_path_y[i]);
-		}
-
-		double target_x = 30;
-		double target_y = s(target_x);
-		double target_dist = sqrt( (target_x*target_x) + (target_y*target_y));
-
-		double x_add_on = 0;	
-
-		for(int i=0; i<=50 - previous_path_x.size(); i++)
-		{
-			double N = ((target_dist)/(0.02*ref_vel/2.24));
-			double x_point = x_add_on + (target_x)/N;
-			double y_point = s(x_point);
-
-			x_add_on = x_point;
-
-			double x_ref = x_point;
-			double y_ref = y_point;
-
-			x_point = (x_ref*cos(ref_yaw) - y_ref*sin(ref_yaw));
-			y_point = (x_ref*sin(ref_yaw) + y_ref*cos(ref_yaw));
-
-			x_point += ref_x;
-			y_point += ref_y;
-
-			next_x_vals.push_back(x_point);
-			next_y_vals.push_back(y_point);
-
-		}
+				next_x_vals.push_back(x_point);
+				next_y_vals.push_back(y_point);
+			}
 
           	json msgJson;
 

@@ -16,12 +16,15 @@ In this C++ project, we implement a path planner to drive simulator car. Our pla
 ### Rubic
 #### The car is able to drive at least 4.32 miles without incident..
 Yes as showed bellow, our ego car drove about 13 miles away without incidents.. 
-
 #### The car drives according to the speed limit.
 Yes, our ego car never exceed the speed limit 49.5/mph
-
 #### Max Acceleration and Jerk are not Exceeded.
-
+#### Car does not have collisions.
+#### The car stays in its lane, except for the time between changing lanes.
+We add a default mode that ego car primaryly drive in middle lane.
+#### The car is able to change lanes
+Yes, when ego car detect itself will hit the leading car,it can decide to change lane or slow down and keep in lane as showed in video.
+#### There is a reflection on how to generate paths.
 
 
 

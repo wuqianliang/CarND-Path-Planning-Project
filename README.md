@@ -1,6 +1,12 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
+### Overview
+In this C++ project, we implement a path planner to drive simulator car. Our planner can drive car to avoid hitting other cars,to keep inside in lane and to pass the slower traffic. Also when possible, ego car need to shift to middle lane for some safely drivering buffer space.
 
+### Project steps
+
+
+### Rubic
 
 
 

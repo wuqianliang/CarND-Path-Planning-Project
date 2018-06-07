@@ -10,7 +10,7 @@ In this C++ project, we implement a path planner to drive simulator car. Our pla
 4. Use spline library to fit future trajectory and avoid big jerk and exceeding max acceleration.
 
 ### Ego car driving video.
-The video is here
+The video is [here](http://www.iqiyi.com/w_19rz8nbh59.html).
 
 ![Alt text](https://github.com/wuqianliang/CarND-Path-Planning-Project/blob/master/data/1.PNG "Optional title")
 

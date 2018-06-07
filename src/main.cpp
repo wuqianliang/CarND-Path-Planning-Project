@@ -258,7 +258,7 @@ int main() {
 		double gap = 20.0;  	
 		// Lane change flag;
 		// If any other car is immediately to left or right, prevent lane change
-		bool car_to_left = false, car_to_right = false,car_just_ahead = false;
+		bool car_to_left = false, car_to_right = false;
 
 		for(int i=0; i < sensor_fusion.size();i++)
 		{
@@ -270,7 +270,6 @@ int main() {
 				double check_speed = sqrt(vx*vx + vy*vy);
 				double check_car_s = sensor_fusion[i][5];
 				int check_car_lane = check_car_d/4;
-				cout << "check_car_lane:" << check_car_lane << endl;
 
 				check_car_s +=((double)prev_size*0.02*check_speed); // See if the end of the ego car's path's ending postion has a collision
 
@@ -284,6 +283,7 @@ int main() {
 				} else if (check_car_lane - lane == 1) {
 					// Ego car can change right
 					car_to_right |= ((car_s - gap) < check_car_s) && ((car_s + gap) > check_car_s);
+
 				} else if (lane - check_car_lane == 1) {
 					// Ego car can change left
 					car_to_left |= ((car_s - gap) < check_car_s) && ((car_s + gap) > check_car_s);
@@ -300,16 +300,13 @@ int main() {
 					} else if (d_diff < -2 && d_diff > -6) {
 						car_to_left = true;
 					} 
-					//else if (d_diff > -2 && d_diff < 2) {
-					//	car_just_ahead = true;
-					//}
 				}
 			}
 		}
 		
 		cout << "too_close:" << too_close << endl;
-		cout << "car_to_right:" << car_to_right << endl;
-		cout << "car_to_left:" << car_to_left << endl;
+		cout << "car_to_right:" << car_to_right<< car_to_right << car_to_right << car_to_right<< endl;
+		cout << "car_to_left:" << car_to_left << car_to_left << car_to_left << car_to_left << endl;
 
 		double speed_limit = 49.5;
 

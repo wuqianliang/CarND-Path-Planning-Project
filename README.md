@@ -9,23 +9,27 @@ In this C++ project, we implement a path planner to drive simulator car. Our pla
 3. Decide to change to faster lane or slow down and keep lane, and avoid driving outside of the lanes.
 4. Use spline library to fit future trajectory and avoid big jerk and exceeding max acceleration.
 
+### Ego car driving video.
+The video is here
+
+image...
+
+
 ### Rubic
 #### The car is able to drive at least 4.32 miles without incident..
 Yes as showed bellow, our ego car drove about 13 miles away without incidents.. 
 #### The car drives according to the speed limit.
 Yes, our ego car never exceed the speed limit 49.5/mph
 #### Max Acceleration and Jerk are not Exceeded.
+As showed in the video,ego car has smooth driving hehaviour.
 #### Car does not have collisions.
+As showed in the video,the car slow down to hit the leading car or change to faster lane.
 #### The car stays in its lane, except for the time between changing lanes.
 We add a default mode that ego car primaryly drive in middle lane.
 #### The car is able to change lanes
 Yes, when ego car detect itself will hit the leading car,it can decide to change lane or slow down and keep in lane as showed in video.
 #### There is a reflection on how to generate paths.
 In the main.cpp, `line 373~402`, generate starting reference point for newly spline fitting trajectory. `line 404~415` add new 3 spline nodes for fitting with 30m's interval. `line 418~426` transform the spline nodes into starting points's local coordinates for convenient caculating.`line 441~444` set the goal of new trajectory.`line 447~467` use fitting spline to generate the rest path points with 30m's distance to fill the path points upto 50s.
-
-
-
-
 
 
 

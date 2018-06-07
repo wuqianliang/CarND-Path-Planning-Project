@@ -12,7 +12,7 @@ In this C++ project, we implement a path planner to drive simulator car. Our pla
 ### Ego car driving video.
 The video is here
 
-image...
+![Alt text](https://github.com/wuqianliang/CarND-Path-Planning-Project/blob/master/data/1.PNG "Optional title")
 
 
 ### Rubic

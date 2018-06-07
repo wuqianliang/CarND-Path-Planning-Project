@@ -9,6 +9,10 @@ In this C++ project, we implement a path planner to drive simulator car. Our pla
 3. Decide to change to faster lane or slow down and keep lane, and avoid driving outside of the lanes.
 4. Use spline library to fit future trajectory and avoid big jerk and exceeding max acceleration.
 
+### Code description
+
+
+
 ### Rubic
 #### The car is able to drive at least 4.32 miles without incident..
 Yes as showed bellow, our ego car drove about 13 miles away without incidents.. 

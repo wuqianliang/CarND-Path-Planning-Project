@@ -1,13 +1,22 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
 ### Overview
-In this C++ project, we implement a path planner to drive simulator car. Our planner can drive car to avoid hitting other cars,to keep inside in lane and to pass the slower traffic. Also when possible, ego car need to shift to middle lane for some safely drivering buffer space.
+In this C++ project, we implement a path planner to drive simulator car. Our planner can drive car without incidents which include exceeding acceleration/jerk/speed, collision, and driving outside of the lanes. Also when possible, ego car need to shift to middle lane for some safely driving buffer space.
 
 ### Project steps
-
+1. Predict ego car's and other cars's s and d in future.
+2. Detect whether ego car will hit other car or there is a faster lane can shift to.
+3. Decide to change to faster lane or slow down and keep lane, and avoid driving outside of the lanes.
+4. Use spline library to fit future trajectory and avoid big jerk and exceeding max acceleration.
 
 ### Rubic
+#### The car is able to drive at least 4.32 miles without incident..
+Yes as showed bellow, our ego car drove about 13 miles away without incidents.. 
 
+#### The car drives according to the speed limit.
+Yes, our ego car never exceed the speed limit 49.5/mph
+
+#### Max Acceleration and Jerk are not Exceeded.
 
 
 

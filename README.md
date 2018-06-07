@@ -25,12 +25,8 @@ Yes, our ego car never exceed the speed limit 49.5/mph
 
 
 
-
-
-
-
-
-
+***
+### The following is orginal readme.
 
 ### Simulator.
 You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab (https://github.com/udacity/self-driving-car-sim/releases/tag/T3_v1.2).

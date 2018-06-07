@@ -55,7 +55,6 @@ int ClosestWaypoint(double x, double y, const vector<double> &maps_x, const vect
 			closestLen = dist;
 			closestWaypoint = i;
 		}
-
 	}
 
 	return closestWaypoint;
@@ -252,6 +251,7 @@ int main() {
 			///////////////////////////////////////////////////////
 			if (prev_size > 0)
 			{
+				// We caculate path for the future state
 				car_s = end_path_s;
 			}
 
@@ -444,7 +444,7 @@ int main() {
 			double target_dist = sqrt( (target_x*target_x) + (target_y*target_y));
 
 			double x_add_on = 0;	
-			// Fill the rest path points for path planner
+			// Fill the rest path points for path planner upto 50 points
 			for(int i=0; i<=50 - previous_path_x.size(); i++)
 			{
 				double N = ((target_dist)/(0.02*ref_vel/2.24));
